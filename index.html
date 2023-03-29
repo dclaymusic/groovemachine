@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>THE GROOVE MACHINE (Prototype)</title>
+        <link rel="stylesheet" href="style.css">
+        <script type="text/javascript">
+
+            let isSynced = false;
+            var isPlaying = false;
+            var tempo = 1000;
+            var metronomeSpeed = 60;
+            var metronomeInc = 0;
+            var timer;
+            var songImages = [[],[]];
+
+            let imgArray = [
+                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+            ];
+
+            window.onload = function() { resetRhythms(); }
+
+            function changeRhythm(part,beats)
+            {
+
+                if(!isSynced)
+                {
+                    img = document.getElementById('b' + part + beats);
+                    imgArray[part][beats] = (imgArray[part][beats] + 1) % 7;
+                    img.src = 'img/n' + imgArray[part][beats] + '.png';
+                }
+                else
+                {
+                    let inBeat = false;
+                    let cycles = [[0,4,8],[1,5,9],[2,6,10],[3,7,11]];
+                    for(let x = 0; x < 4; x++)
+                    {
+                        let a = cycles[x][0]
+                        let b = cycles[x][1]
+                        let c = cycles[x][2]
+
+                        if(beats == a || beats == b || beats == c)
+                        {
+                            let i = (imgArray[part][beats] + 1) % 7;
+                            imgArray[part][a] = i;
+                            imgArray[part][b] = i;
+                            imgArray[part][c] = i;
+                            document.getElementById('b' + part + '' + a).src = 'img/n' + imgArray[part][a] + '.png';
+                            document.getElementById('b' + part + '' + b).src = 'img/n' + imgArray[part][b] + '.png';
+                            document.getElementById('b' + part + '' + c).src = 'img/n' + imgArray[part][c] + '.png';
+                            inBeat = true;
+                        }
+                    }
+                    if(!inBeat)
+                    {
+                        img = document.getElementById('b' + part + beats);
+                        imgArray[part][beats] = (imgArray[part][beats] + 1) % 7;
+                        img.src = 'img/n' + imgArray[part][beats] + '.png';
+                    }
+                }
+
+            }
+
+            function toggleSync()
+            {
+                isSynced = !isSynced;
+                if(isSynced)
+                {
+                    for(let p = 0; p < 2; p++)
+                    {
+                        for(let b = 4; b < 12; b++)
+                        {
+                            imgArray[p][b] = imgArray[p][b%4]
+                            img = document.getElementById('b' + p + b);
+                            img.src = 'img/n' + imgArray[p][b%4] + '.png';
+                        }
+
+                    }
+                }
+                
+            }
+
+            function resetRhythms()
+            {
+                songImages = [[],[]];
+                for(let p = 0; p < 2; p++)
+                {
+                    for(let b = 0; b < 16; b++)
+                    {
+                        img = document.getElementById('b' + p + b);
+                        songImages[p].push(img.id);
+                        img.src = 'img/n0.png';
+                        imgArray[p][b] = 0;
+                    }
+                }
+            }
+
+            function scrambleRhythms()
+            {
+                if(!isSynced)
+                {
+                    for(let p = 0; p < 2; p++)
+                    {
+                        for(let b = 0; b < 16; b++)
+                        {
+                            img = document.getElementById('b' + p + b);
+                            imgArray[p][b] = randomInt(7);
+                            img.src = 'img/n' + imgArray[p][b] + '.png';
+                        }
+                    }
+                }
+                else
+                {
+                    for(let p = 0; p < 2; p++)
+                    {
+                        for(let b = 0; b < 3; b++)
+                        {
+                            imgArray[p][b] = randomInt(7);
+                            changeRhythm(p,b);
+                        }
+                        for(let b = 12; b < 16; b++)
+                        {
+                            imgArray[p][b] = randomInt(7);
+                            changeRhythm(p,b);
+                        }
+
+                    }
+
+                }
+
+            }
+
+            function randomInt(max)
+            {
+                rand_val = Math.floor(Math.random() * Math.floor(max + 1))
+                return rand_val;
+            }
+
+
+
+            function togglePlay() {
+                isPlaying = !isPlaying;
+
+
+                if(isPlaying)
+                {
+                    document.getElementById("tempo").disabled = true;
+                    metronomeInc = 0;
+                    timer = setInterval(metronome, tempo);
+                    document.getElementById('play').innerHTML = 'Stop';
+                }
+                else
+                {
+                    document.getElementById("tempo").disabled = false;
+                    metronomeInc = 0;
+                    document.getElementById('play').innerHTML = 'Play';
+                    for(let i = 0; i < songImages.length; i++)
+                    {
+                        for(let j = 0; j < songImages[i].length; j++)
+                        {
+                            document.getElementById(songImages[i][j]).style.outline = 'none';
+                        }
+                    }
+                    clearInterval(timer);
+                }
+            }
+
+            function resetTimer()
+            {
+                // metronomeInc = 0;
+                // document.getElementById('play').innerHTML = 'Play';
+                // for(let i = 0; i < songImages.length; i++)
+                // {
+                // 	document.getElementById(songImages[i]).style.outline = 'none';
+                // }
+                // clearInterval(timer);
+            }
+
+            function metronome()
+            {
+
+                document.getElementById(songImages[0][metronomeInc]).style.outline = '4px red solid';
+                document.getElementById(songImages[0][metronomeInc]).style.outlineOffset = '-4px';
+                document.getElementById(songImages[1][metronomeInc]).style.outline = '4px blue solid';
+                document.getElementById(songImages[1][metronomeInc]).style.outlineOffset = '-4px';
+                if(metronomeInc != 0) 
+                { 
+                    document.getElementById(songImages[0][metronomeInc-1]).style.outline = 'none';
+                    document.getElementById(songImages[1][metronomeInc-1]).style.outline = 'none';
+                }
+                else {
+                    document.getElementById(songImages[0][15]).style.outline = 'none';
+                    document.getElementById(songImages[1][15]).style.outline = 'none';
+                }
+                metronomeInc++;
+                if(metronomeInc == 16) { metronomeInc = 0; }
+                
+            }
+
+            function setTempo() 
+            {
+                document.getElementById('tempo').oninput = function() {
+                    metronomeSpeed = this.value;
+                    tempo = (60/metronomeSpeed)*1000;
+                    document.getElementById('output').innerHTML = this.value + ' BPM';
+
+                }
+            }
+
+
+        </script>
+    </head>
+    <body>
+        <h1>The Groove Machine (Prototype)</h1>
+        <div id="main">
+            <div id="line1">
+                <div class='beat'>
+                    <div><img src='img/clef.png'></div>
+                    <div><img src='img/clef.png'></div>
+                </div>
+                <div class='beat'>
+                    <div><img id='b00' src='img/n0.png' onclick="changeRhythm(0,0)"></div>
+                    <div><img id='b10' src='img/n0.png' onclick="changeRhythm(1,0)"></div>
+                </div>
+                <div class='beat'>
+                    <div><img id='b01' src='img/n0.png' onclick="changeRhythm(0,1)"></div>
+                    <div><img id='b11' src='img/n0.png' onclick="changeRhythm(1,1)"></div>
+                </div>
+                <div class='beat'>
+                    <div><img id='b02' src='img/n0.png' onclick="changeRhythm(0,2)"></div>
+                    <div><img id='b12' src='img/n0.png' onclick="changeRhythm(1,2)"></div>
+                </div>
+                <div class='beat'>
+                    <div><img id='b03' src='img/n0.png' onclick="changeRhythm(0,3)"></div>
+                    <div><img id='b13' src='img/n0.png' onclick="changeRhythm(1,3)"></div>
+                </div>
+                <div class='beat'>
+                    <div><img src='img/bar.png'></div>
+                    <div><img src='img/bar.png'></div>
+                </div>
+                <div class='beat'>
+                    <div><img id='b04' src='img/n0.png' onclick="changeRhythm(0,4)"></div>
+                    <div><img id='b14' src='img/n0.png' onclick="changeRhythm(1,4)"></div>
+                </div>
+                <div class='beat'>
+                    <div><img id='b05' src='img/n0.png' onclick="changeRhythm(0,5)"></div>
+                    <div><img id='b15' src='img/n0.png' onclick="changeRhythm(1,5)"></div>
+                </div>
+                <div class='beat'>
+                    <div><img id='b06' src='img/n0.png' onclick="changeRhythm(0,6)"></div>
+                    <div><img id='b16' src='img/n0.png' onclick="changeRhythm(1,6)"></div>
+                </div>
+                <div class='beat'>
+                    <div><img id='b07' src='img/n0.png' onclick="changeRhythm(0,7)"></div>
+                    <div><img id='b17' src='img/n0.png' onclick="changeRhythm(1,7)"></div>
+                </div>
+                <div class='beat'>
+                    <div><img src='img/bar.png'></div>
+                    <div><img src='img/bar.png'></div>
+                </div>
+            </div>
+            <div id="line2">
+                <div class='beat'>
+                    <div><img src='img/clef.png'></div>
+                    <div><img src='img/clef.png'></div>
+                </div>
+                <div class='beat'>
+                    <div><img id='b08' src='img/n0.png' onclick="changeRhythm(0,8)"></div>
+                    <div><img id='b18' src='img/n0.png' onclick="changeRhythm(1,8)"></div>
+                </div>
+                <div class='beat'>
+                    <div><img id='b09' src='img/n0.png' onclick="changeRhythm(0,9)"></div>
+                    <div><img id='b19' src='img/n0.png' onclick="changeRhythm(1,9)"></div>
+                </div>
+                <div class='beat'>
+                    <div><img id='b010' src='img/n0.png' onclick="changeRhythm(0,10)"></div>
+                    <div><img id='b110' src='img/n0.png' onclick="changeRhythm(1,10)"></div>
+                </div>
+                <div class='beat'>
+                    <div><img id='b011' src='img/n0.png' onclick="changeRhythm(0,11)"></div>
+                    <div><img id='b111' src='img/n0.png' onclick="changeRhythm(1,11)"></div>
+                </div>
+                <div class='beat'>
+                    <div><img src='img/bar.png'></div>
+                    <div><img src='img/bar.png'></div>
+                </div>
+                <div class='beat'>
+                    <div><img id='b012' src='img/n0.png' onclick="changeRhythm(0,12)"></div>
+                    <div><img id='b112' src='img/n0.png' onclick="changeRhythm(1,12)"></div>
+                </div>
+                <div class='beat'>
+                    <div><img id='b013' src='img/n0.png' onclick="changeRhythm(0,13)"></div>
+                    <div><img id='b113' src='img/n0.png' onclick="changeRhythm(1,13)"></div>
+                </div>
+                <div class='beat'>
+                    <div><img id='b014' src='img/n0.png' onclick="changeRhythm(0,14)"></div>
+                    <div><img id='b114' src='img/n0.png' onclick="changeRhythm(1,14)"></div>
+                </div>
+                <div class='beat'>
+                    <div><img id='b015' src='img/n0.png' onclick="changeRhythm(0,15)"></div>
+                    <div><img id='b115' src='img/n0.png' onclick="changeRhythm(1,15)"></div>
+                </div>
+                <div class='beat'>
+                    <div><img src='img/end.png'></div>
+                    <div><img src='img/end.png'></div>
+                </div>
+            </div>
+    </div>
+        <footer id="footer">
+            <div id="footerdiv1">
+                <button id="play" onclick="togglePlay()">Play</button>
+                <button onclick="resetRhythms()">Reset</button>
+                <button onclick="scrambleRhythms()">Scramble</button>
+                <input type="checkbox" id="synced" name="synced" onclick="toggleSync()">
+                <label for="synced">Sync Pattern</label>
+            </div>
+            <div id="tempocontainer">
+                <input type="range" min="30" max="180" value="60" class="slider" id="tempo" oninput="setTempo()">
+                <output id="output">60 BPM</output>
+            </div>
+        </footer>
+
+    </body>
+</html>
